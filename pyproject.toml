@@ -29,6 +29,7 @@ dependencies = []
 
 [project.optional-dependencies]
 vision = ["Pillow>=10"]
+ocr = ["Pillow>=10", "pytesseract>=0.3"]
 dev = ["pytest>=7"]
 
 [project.scripts]

@@ -6,15 +6,17 @@ import hashlib
 import mimetypes
 from pathlib import Path
 import struct
-from typing import BinaryIO, List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
+from .adapters import adapter_by_name
 from .capsule import Capsule, ImageInfo, ProvenanceRecord, SemanticInfo, SourceInfo
+from .similarity import normalize
 
 
 EXTRACTOR_VERSION = "0.1.0"
 
 
-def from_file(path: str | Path) -> Capsule:
+def from_file(path: str | Path, *, adapters: Optional[Iterable[str]] = None) -> Capsule:
     image_path = Path(path)
     data = image_path.read_bytes()
     stat = image_path.stat()
@@ -31,11 +33,22 @@ def from_file(path: str | Path) -> Capsule:
     image = _extract_with_pillow(image_path)
     if image is None:
         image = _extract_core(data, media_type)
+    embedding = _visual_embedding(image)
+    tags = _basic_tags(media_type, image)
+    caption = _heuristic_caption(image, tags)
+    privacy_flags = _privacy_flags(image)
 
     capsule = Capsule(
         source=source,
         image=image,
-        semantic=SemanticInfo(tags=_basic_tags(media_type, image)),
+        semantic=SemanticInfo(
+            caption=caption,
+            tags=tags,
+            embedding=embedding,
+            embedding_model="imgcapsule-visual-v1",
+            embedding_dimensions=len(embedding),
+            privacy_flags=privacy_flags,
+        ),
         provenance=[
             ProvenanceRecord(
                 name="core-file",
@@ -58,11 +71,20 @@ def from_file(path: str | Path) -> Capsule:
                     "image.average_color",
                     "image.perceptual_hash",
                     "image.preview_data_uri",
+                    "image.exif",
                     "semantic.tags",
+                    "semantic.caption",
+                    "semantic.embedding",
+                    "semantic.embedding_model",
+                    "semantic.embedding_dimensions",
+                    "semantic.privacy_flags",
                 ],
             ),
         ],
     )
+    for adapter_name in adapters or []:
+        adapter = adapter_by_name(adapter_name)
+        capsule = adapter.apply(capsule, image_path)
     return capsule
 
 
@@ -81,6 +103,7 @@ def _extract_with_pillow(path: Path) -> Optional[ImageInfo]:
             colors = _dominant_colors_from_pillow(rgb)
             phash = _dhash_from_pillow(rgb)
             preview = _preview_from_pillow(rgb)
+            exif = _exif_from_pillow(original)
             return ImageInfo(
                 width=original.width,
                 height=original.height,
@@ -89,6 +112,7 @@ def _extract_with_pillow(path: Path) -> Optional[ImageInfo]:
                 dominant_colors=colors,
                 perceptual_hash=phash,
                 preview_data_uri=preview,
+                exif=exif,
             )
     except Exception:
         return None
@@ -140,6 +164,79 @@ def _extract_core(data: bytes, media_type: str) -> ImageInfo:
             ]
             phash = _dhash_from_pixels(width, height, pixels)
     return ImageInfo(width=width, height=height, mode=mode, average_color=average, perceptual_hash=phash)
+
+
+def _exif_from_pillow(img) -> dict:
+    try:
+        from PIL.ExifTags import TAGS
+
+        raw = img.getexif()
+        exif = {}
+        for key, value in raw.items():
+            label = TAGS.get(key, str(key))
+            if isinstance(value, bytes):
+                value = value[:64].hex()
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                exif[label] = value
+            else:
+                exif[label] = str(value)
+        return exif
+    except Exception:
+        return {}
+
+
+def _visual_embedding(image: ImageInfo) -> List[float]:
+    values: List[float] = []
+    if image.average_color:
+        values.extend([channel / 255.0 for channel in image.average_color])
+    else:
+        values.extend([0.0, 0.0, 0.0])
+
+    for color in image.dominant_colors[:5]:
+        values.extend([channel / 255.0 for channel in color[:3]])
+    while len(values) < 18:
+        values.append(0.0)
+
+    width = float(image.width or 0)
+    height = float(image.height or 0)
+    total = width + height
+    if total:
+        values.extend([width / total, height / total, min(width, height) / max(width, height)])
+    else:
+        values.extend([0.0, 0.0, 0.0])
+
+    if image.perceptual_hash:
+        hash_value = int(image.perceptual_hash, 16)
+        for shift in range(0, 64, 8):
+            values.append(((hash_value >> shift) & 0xFF) / 255.0)
+    else:
+        values.extend([0.0] * 8)
+    return normalize(values)
+
+
+def _heuristic_caption(image: ImageInfo, tags: List[str]) -> str:
+    parts = []
+    if image.width and image.height:
+        orientation = "landscape" if image.width > image.height else "portrait" if image.height > image.width else "square"
+        parts.append(f"{orientation} image")
+        parts.append(f"{image.width}x{image.height}")
+    elif tags:
+        parts.append(f"{tags[0]} image")
+    else:
+        parts.append("image")
+    if image.average_color:
+        parts.append(f"average color rgb({image.average_color[0]}, {image.average_color[1]}, {image.average_color[2]})")
+    return ", ".join(parts)
+
+
+def _privacy_flags(image: ImageInfo) -> List[str]:
+    flags = []
+    if image.exif:
+        flags.append("has_exif")
+    gps_keys = {"GPSInfo", "GPSLatitude", "GPSLongitude"}
+    if gps_keys.intersection(image.exif):
+        flags.append("has_location_metadata")
+    return flags
 
 
 def _guess_media_type(path: Path, data: bytes) -> str:

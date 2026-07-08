@@ -7,6 +7,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from .capsule import Capsule
 from .extractors import from_file
+from .similarity import cosine_similarity
 
 
 class Store:
@@ -39,6 +40,9 @@ class Store:
                 caption text,
                 tags text not null,
                 ocr_text text,
+                embedding text,
+                embedding_model text,
+                privacy_flags text not null default '',
                 capsule_json text not null,
                 created_at text not null,
                 unique(sha256)
@@ -47,6 +51,7 @@ class Store:
             create index if not exists idx_capsules_phash on capsules(perceptual_hash);
             """
         )
+        self._migrate()
         try:
             self.conn.execute(
                 "create virtual table if not exists capsule_fts using fts5(source_path, caption, tags, ocr_text)"
@@ -65,31 +70,48 @@ class Store:
             )
         self.conn.commit()
 
-    def add_path(self, path: str | Path) -> Capsule:
-        capsule = from_file(path)
+    def _migrate(self) -> None:
+        existing = {
+            row["name"]
+            for row in self.conn.execute("pragma table_info(capsules)").fetchall()
+        }
+        migrations = {
+            "embedding": "alter table capsules add column embedding text",
+            "embedding_model": "alter table capsules add column embedding_model text",
+            "privacy_flags": "alter table capsules add column privacy_flags text not null default ''",
+        }
+        for column, sql in migrations.items():
+            if column not in existing:
+                self.conn.execute(sql)
+
+    def add_path(self, path: str | Path, *, adapters: Optional[Iterable[str]] = None) -> Capsule:
+        capsule = from_file(path, adapters=adapters)
         self.add_capsule(capsule)
         return capsule
 
-    def add_folder(self, folder: str | Path, *, recursive: bool = True) -> List[Capsule]:
+    def add_folder(self, folder: str | Path, *, recursive: bool = True, adapters: Optional[Iterable[str]] = None) -> List[Capsule]:
         root = Path(folder)
         pattern = "**/*" if recursive else "*"
         capsules = []
         for path in root.glob(pattern):
             if path.is_file() and _looks_like_image(path):
-                capsules.append(self.add_path(path))
+                capsules.append(self.add_path(path, adapters=adapters))
         return capsules
 
     def add_capsule(self, capsule: Capsule) -> None:
         payload = capsule.to_json(indent=None)
         tags = " ".join(capsule.semantic.tags)
+        privacy_flags = " ".join(capsule.semantic.privacy_flags)
+        embedding = json.dumps(capsule.semantic.embedding) if capsule.semantic.embedding else None
         with self.conn:
             cursor = self.conn.execute(
                 """
                 insert into capsules (
                     source_path, sha256, media_type, width, height, perceptual_hash,
-                    caption, tags, ocr_text, capsule_json, created_at
+                    caption, tags, ocr_text, embedding, embedding_model, privacy_flags,
+                    capsule_json, created_at
                 )
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 on conflict(sha256) do update set
                     source_path=excluded.source_path,
                     media_type=excluded.media_type,
@@ -99,6 +121,9 @@ class Store:
                     caption=excluded.caption,
                     tags=excluded.tags,
                     ocr_text=excluded.ocr_text,
+                    embedding=excluded.embedding,
+                    embedding_model=excluded.embedding_model,
+                    privacy_flags=excluded.privacy_flags,
                     capsule_json=excluded.capsule_json
                 """,
                 (
@@ -111,6 +136,9 @@ class Store:
                     capsule.semantic.caption,
                     tags,
                     capsule.semantic.ocr_text,
+                    embedding,
+                    capsule.semantic.embedding_model,
+                    privacy_flags,
                     payload,
                     capsule.created_at,
                 ),
@@ -128,11 +156,23 @@ class Store:
             return None
         return Capsule.from_dict(json.loads(row["capsule_json"]))
 
+    def list(self, *, limit: int = 50) -> List[Dict[str, Any]]:
+        rows = self.conn.execute(
+            """
+            select source_path, sha256, media_type, width, height, tags, caption, ocr_text, privacy_flags
+            from capsules
+            order by id desc
+            limit ?
+            """,
+            (limit,),
+        ).fetchall()
+        return [_row_to_result(row) for row in rows]
+
     def search(self, query: str, *, limit: int = 10) -> List[Dict[str, Any]]:
         try:
             rows = self.conn.execute(
                 """
-                select c.source_path, c.sha256, c.media_type, c.width, c.height, c.tags, c.caption, c.ocr_text
+                select c.source_path, c.sha256, c.media_type, c.width, c.height, c.tags, c.caption, c.ocr_text, c.privacy_flags
                 from capsule_fts f
                 join capsules c on c.id = f.rowid
                 where capsule_fts match ?
@@ -144,7 +184,7 @@ class Store:
             like = f"%{query}%"
             rows = self.conn.execute(
                 """
-                select source_path, sha256, media_type, width, height, tags, caption, ocr_text
+                select source_path, sha256, media_type, width, height, tags, caption, ocr_text, privacy_flags
                 from capsules
                 where source_path like ? or tags like ? or caption like ? or ocr_text like ?
                 limit ?
@@ -152,6 +192,32 @@ class Store:
                 (like, like, like, like, limit),
             ).fetchall()
         return [_row_to_result(row) for row in rows]
+
+    def similar(self, path_or_sha: str | Path, *, limit: int = 10) -> List[Dict[str, Any]]:
+        query_capsule = None
+        query = str(path_or_sha)
+        if Path(query).exists():
+            query_capsule = from_file(query)
+        else:
+            query_capsule = self.get_by_sha256(query)
+        if not query_capsule or not query_capsule.semantic.embedding:
+            return []
+        rows = self.conn.execute(
+            """
+            select source_path, sha256, media_type, width, height, tags, caption, ocr_text,
+                   privacy_flags, embedding
+            from capsules
+            where embedding is not null
+            """
+        ).fetchall()
+        scored = []
+        for row in rows:
+            embedding = json.loads(row["embedding"])
+            score = cosine_similarity(query_capsule.semantic.embedding, embedding)
+            item = _row_to_result(row)
+            item["score"] = score
+            scored.append(item)
+        return sorted(scored, key=lambda item: item["score"], reverse=True)[:limit]
 
     def near_duplicates(self, path_or_hash: str | Path, *, max_distance: int = 8, limit: int = 10) -> List[Dict[str, Any]]:
         query_hash = str(path_or_hash)
@@ -161,7 +227,7 @@ class Store:
             return []
         rows = self.conn.execute(
             """
-            select source_path, sha256, media_type, width, height, tags, caption, ocr_text, perceptual_hash
+            select source_path, sha256, media_type, width, height, tags, caption, ocr_text, privacy_flags, perceptual_hash
             from capsules
             where perceptual_hash is not null
             """
@@ -174,6 +240,34 @@ class Store:
                 item["distance"] = distance
                 scored.append(item)
         return sorted(scored, key=lambda item: item["distance"])[:limit]
+
+    def refresh(self, *, adapters: Optional[Iterable[str]] = None) -> int:
+        rows = self.conn.execute("select source_path from capsules order by id").fetchall()
+        count = 0
+        for row in rows:
+            path = Path(row["source_path"])
+            if path.exists():
+                self.add_path(path, adapters=adapters)
+                count += 1
+        return count
+
+    def export_jsonl(self, path: str | Path) -> Path:
+        out = Path(path)
+        with out.open("w", encoding="utf-8") as handle:
+            for row in self.conn.execute("select capsule_json from capsules order by id"):
+                handle.write(row["capsule_json"] + "\n")
+        return out
+
+    def import_jsonl(self, path: str | Path) -> int:
+        count = 0
+        with Path(path).open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                self.add_capsule(Capsule.from_dict(json.loads(line)))
+                count += 1
+        return count
 
     def _row_id_for_sha(self, sha256: str) -> int:
         row = self.conn.execute("select id from capsules where sha256 = ?", (sha256,)).fetchone()
@@ -196,6 +290,7 @@ def _row_to_result(row: sqlite3.Row) -> Dict[str, Any]:
         "tags": row["tags"].split() if row["tags"] else [],
         "caption": row["caption"],
         "ocr_text": row["ocr_text"],
+        "privacy_flags": row["privacy_flags"].split() if "privacy_flags" in row.keys() and row["privacy_flags"] else [],
     }
 
 
