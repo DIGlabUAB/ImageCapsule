@@ -116,6 +116,88 @@ imgcapsule enrich photo.jpg.capsule.json model-output.json
 
 This keeps the image as the source of truth while making model outputs cached, versioned, inspectable, and replaceable.
 
+## AI Model Providers
+
+The base package works without AI dependencies. Real model adapters are optional and selected at runtime.
+
+### Hugging Face Open-Source Models
+
+Install the Hugging Face extra:
+
+```bash
+python -m pip install "imgcapsule[hf]"
+```
+
+Use default open-source models:
+
+```bash
+imgcapsule build photo.jpg --adapter hf-caption --adapter hf-clip --adapter hf-tags
+imgcapsule index ./photos --db photos.icdb --adapter hf-caption --adapter hf-clip
+```
+
+Swap any model from Hugging Face:
+
+```bash
+imgcapsule build photo.jpg \
+  --adapter hf-caption=Salesforce/blip-image-captioning-large \
+  --adapter hf-clip=openai/clip-vit-large-patch14 \
+  --adapter "hf-tags=openai/clip-vit-base-patch32|invoice,receipt,medical image,person"
+```
+
+Supported adapter names:
+
+- `hf-caption=<model>`: image captioning model, default `Salesforce/blip-image-captioning-base`.
+- `hf-clip=<model>`: image embedding model, default `openai/clip-vit-base-patch32`.
+- `hf-tags=<model>|label1,label2`: zero-shot image labels, default `openai/clip-vit-base-patch32`.
+
+If the optional dependencies are missing, the capsule still builds and records a warning under `extensions.warnings`.
+
+### BYOK / Custom Vision Endpoint
+
+Use any hosted model through an HTTP endpoint:
+
+```bash
+export IMGCAPSULE_BYOK_API_KEY="..."
+export IMGCAPSULE_BYOK_MODEL="your-model-name"
+
+imgcapsule build photo.jpg --adapter byok=https://your-endpoint.example/v1/image-capsule
+```
+
+Or set the endpoint once:
+
+```bash
+export IMGCAPSULE_BYOK_ENDPOINT="https://your-endpoint.example/v1/image-capsule"
+imgcapsule index ./photos --db photos.icdb --adapter byok
+```
+
+The BYOK adapter sends:
+
+```json
+{
+  "model": "your-model-name",
+  "task": "image_capsule",
+  "image_base64": "...",
+  "media_type": "image/jpeg",
+  "fields": ["caption", "tags", "ocr_text", "embedding", "privacy_flags"]
+}
+```
+
+It accepts either a direct response:
+
+```json
+{
+  "caption": "a scanned invoice",
+  "tags": ["invoice", "document"],
+  "ocr_text": "Invoice 123",
+  "embedding": [0.1, 0.2, 0.3],
+  "embedding_model": "my-model",
+  "privacy_flags": ["contains_text"],
+  "confidence": {"caption": 0.91}
+}
+```
+
+or an OpenAI-compatible `choices[0].message.content` string containing JSON.
+
 ## Optional OCR
 
 If `pytesseract`, Tesseract, and Pillow are installed, OCR can be enabled:

@@ -18,7 +18,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     build = sub.add_parser("build", help="Create a capsule JSON sidecar for one image.")
     build.add_argument("image")
     build.add_argument("-o", "--out")
-    build.add_argument("--adapter", action="append", default=[], help="Optional extractor adapter, e.g. ocr.")
+    build.add_argument(
+        "--adapter",
+        action="append",
+        default=[],
+        help="Optional extractor adapter, e.g. ocr, hf-caption=<model>, hf-clip=<model>, hf-tags=<model>|label1,label2, byok=<url>.",
+    )
 
     inspect = sub.add_parser("inspect", help="Print a capsule JSON file.")
     inspect.add_argument("capsule")
@@ -35,7 +40,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     index.add_argument("path")
     index.add_argument("--db", default="images.icdb")
     index.add_argument("--no-recursive", action="store_true")
-    index.add_argument("--adapter", action="append", default=[], help="Optional extractor adapter, e.g. ocr.")
+    index.add_argument(
+        "--adapter",
+        action="append",
+        default=[],
+        help="Optional extractor adapter, e.g. ocr, hf-caption=<model>, hf-clip=<model>, hf-tags=<model>|label1,label2, byok=<url>.",
+    )
 
     list_cmd = sub.add_parser("list", help="List recently indexed capsules.")
     list_cmd.add_argument("db")
@@ -59,7 +69,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
 
     refresh = sub.add_parser("refresh", help="Refresh indexed capsules from their source images.")
     refresh.add_argument("db")
-    refresh.add_argument("--adapter", action="append", default=[], help="Optional extractor adapter, e.g. ocr.")
+    refresh.add_argument(
+        "--adapter",
+        action="append",
+        default=[],
+        help="Optional extractor adapter, e.g. ocr, hf-caption=<model>, hf-clip=<model>, hf-tags=<model>|label1,label2, byok=<url>.",
+    )
 
     export = sub.add_parser("export", help="Export a store as JSON Lines.")
     export.add_argument("db")

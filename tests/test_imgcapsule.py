@@ -1,8 +1,11 @@
 import tempfile
+import json
 import unittest
 from pathlib import Path
 
 import imgcapsule as ic
+import imgcapsule.adapters as adapters_module
+from imgcapsule.adapters import BYOKVisionAdapter, HuggingFaceCaptionAdapter, adapter_by_name
 from imgcapsule.capsule import Capsule
 from imgcapsule.cli import main
 
@@ -92,6 +95,67 @@ class ImgCapsuleTests(unittest.TestCase):
             self.assertEqual(main(["export", str(db), str(out)]), 0)
             imported = root / "imported.icdb"
             self.assertEqual(main(["import", str(imported), str(out)]), 0)
+
+    def test_adapter_specs_and_missing_hf_are_safe(self):
+        caption = adapter_by_name("hf-caption=example/model")
+        self.assertIsInstance(caption, HuggingFaceCaptionAdapter)
+        self.assertEqual(caption.model_id, "example/model")
+
+        tags = adapter_by_name("hf-tags=example/tags|invoice,receipt")
+        self.assertEqual(tags.model_id, "example/tags")
+        self.assertEqual(tags.labels, ("invoice", "receipt"))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            image = root / "sample.ppm"
+            write_ppm(image, [(10, 20, 30), (20, 30, 40), (30, 40, 50)])
+            capsule = ic.from_file(image, adapters=["hf-caption=missing/model"])
+            if not caption.available():
+                self.assertIn("warnings", capsule.extensions)
+
+    def test_byok_adapter_enriches_capsule(self):
+        received = {}
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return None
+
+            def read(self):
+                body = {
+                    "caption": "a test image from a custom model",
+                    "tags": ["custom", "test"],
+                    "ocr_text": "HELLO",
+                    "embedding": [0.1, 0.2, 0.3],
+                    "embedding_model": received["payload"]["model"],
+                    "privacy_flags": ["contains_text"],
+                    "confidence": {"caption": 0.99},
+                }
+                return json.dumps(body).encode("utf-8")
+
+        def fake_urlopen(request, timeout=60):
+            received["payload"] = json.loads(request.data.decode("utf-8"))
+            received["timeout"] = timeout
+            return FakeResponse()
+
+        original_urlopen = adapters_module.urlopen
+        adapters_module.urlopen = fake_urlopen
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                image = root / "sample.ppm"
+                write_ppm(image, [(10, 20, 30), (20, 30, 40), (30, 40, 50)])
+                capsule = ic.from_file(image, adapters=["byok=http://example.test/capsule"])
+                self.assertEqual(capsule.semantic.caption, "a test image from a custom model")
+                self.assertIn("custom", capsule.semantic.tags)
+                self.assertEqual(capsule.semantic.ocr_text, "HELLO")
+                self.assertEqual(capsule.semantic.embedding_model, "vision-model")
+                self.assertIn("contains_text", capsule.semantic.privacy_flags)
+                self.assertEqual(received["payload"]["task"], "image_capsule")
+        finally:
+            adapters_module.urlopen = original_urlopen
 
 
 if __name__ == "__main__":

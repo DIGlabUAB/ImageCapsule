@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "imgcapsule"
-version = "0.1.0"
+version = "0.2.0"
 description = "Portable semantic sidecars for images: hashes, metadata, previews, provenance, and searchable capsules."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -30,6 +30,7 @@ dependencies = []
 [project.optional-dependencies]
 vision = ["Pillow>=10"]
 ocr = ["Pillow>=10", "pytesseract>=0.3"]
+hf = ["Pillow>=10", "torch>=2", "transformers>=4.40"]
 dev = ["pytest>=7"]
 
 [project.scripts]
