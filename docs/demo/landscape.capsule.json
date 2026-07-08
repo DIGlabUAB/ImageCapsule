@@ -1,0 +1,122 @@
+{
+  "created_at": "2026-07-08T04:19:41.948135Z",
+  "extensions": {},
+  "image": {
+    "average_color": [
+      66,
+      128,
+      136
+    ],
+    "dominant_colors": [],
+    "exif": {},
+    "height": 64,
+    "mode": "RGB",
+    "perceptual_hash": "ffffffff00000000",
+    "preview_data_uri": null,
+    "width": 96
+  },
+  "provenance": [
+    {
+      "confidence": null,
+      "created_at": "2026-07-08T04:19:41.948131Z",
+      "fields": [
+        "source.path",
+        "source.sha256",
+        "source.media_type",
+        "source.size_bytes",
+        "source.modified_at"
+      ],
+      "name": "core-file",
+      "version": "0.2.0"
+    },
+    {
+      "confidence": null,
+      "created_at": "2026-07-08T04:19:41.948133Z",
+      "fields": [
+        "image.width",
+        "image.height",
+        "image.mode",
+        "image.average_color",
+        "image.perceptual_hash",
+        "image.preview_data_uri",
+        "image.exif",
+        "semantic.tags",
+        "semantic.caption",
+        "semantic.embedding",
+        "semantic.embedding_model",
+        "semantic.embedding_dimensions",
+        "semantic.privacy_flags"
+      ],
+      "name": "core-image",
+      "version": "0.2.0"
+    },
+    {
+      "confidence": null,
+      "created_at": "2026-07-08T04:19:41.948142Z",
+      "fields": [
+        "semantic.caption",
+        "semantic.tags",
+        "semantic.confidence"
+      ],
+      "name": "demo-model-output",
+      "version": "0.1.0"
+    }
+  ],
+  "refreshed_at": "2026-07-08T04:19:41.948139Z",
+  "schema_version": "0.2",
+  "semantic": {
+    "caption": "green mountain landscape under blue sky",
+    "confidence": {
+      "caption": 0.86
+    },
+    "embedding": [
+      0.1096882883232232,
+      0.21272880159655405,
+      0.2260243516963387,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25427739565838103,
+      0.169518263772254,
+      0.28253043962042335,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.423795659430635,
+      0.423795659430635,
+      0.423795659430635,
+      0.423795659430635
+    ],
+    "embedding_dimensions": 29,
+    "embedding_model": "imgcapsule-visual-v1",
+    "ocr_text": null,
+    "privacy_flags": [],
+    "tags": [
+      "x-portable-pixmap",
+      "landscape",
+      "mountain",
+      "outdoor"
+    ]
+  },
+  "source": {
+    "fingerprint_algorithm": "sha256",
+    "media_type": "image/x-portable-pixmap",
+    "modified_at": "2026-07-08T04:19:41.906614Z",
+    "path": "docs/demo/landscape.ppm",
+    "sha256": "05913d5dace03ea03cb6629e7b5ebf51697ed3ab4454dab55465d978c4274301",
+    "size_bytes": 18445
+  }
+}

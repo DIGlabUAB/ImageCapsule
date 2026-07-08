@@ -1,0 +1,16 @@
+{
+  "images_processed": 3,
+  "capsules_created": [
+    "docs/demo/invoice.capsule.json",
+    "docs/demo/invoice-copy.capsule.json",
+    "docs/demo/landscape.capsule.json"
+  ],
+  "store": "docs/demo/demo.icdb",
+  "search_invoice_top": "docs/demo/invoice.ppm",
+  "similar_invoice_top_score": 1.0,
+  "duplicate_invoice_distance": 0,
+  "duplicate_candidates": [
+    "docs/demo/invoice.ppm",
+    "docs/demo/invoice-copy.ppm"
+  ]
+}

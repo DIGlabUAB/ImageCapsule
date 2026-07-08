@@ -1,0 +1,203 @@
+{
+  "search_invoice": [
+    {
+      "path": "docs/demo/invoice.ppm",
+      "sha256": "13f2a806473ed7c1a762dcd3b5c6a338d22cdf71c4dcbcbfaece49f24f7f654f",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "receipt",
+        "contains-text"
+      ],
+      "caption": "scanned invoice with three line items",
+      "ocr_text": "Invoice 1042 Total $48.30 Paid by card",
+      "privacy_flags": [
+        "contains_text"
+      ]
+    },
+    {
+      "path": "docs/demo/invoice-copy.ppm",
+      "sha256": "f700f8c7cb4702a448488908d1acb79ddf025240768ebda4a2c28ab2d91363fb",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "duplicate-candidate"
+      ],
+      "caption": "near duplicate scanned invoice",
+      "ocr_text": "Invoice 1042 Total $48.30",
+      "privacy_flags": [
+        "contains_text"
+      ]
+    }
+  ],
+  "similar_invoice": [
+    {
+      "path": "docs/demo/invoice.ppm",
+      "sha256": "13f2a806473ed7c1a762dcd3b5c6a338d22cdf71c4dcbcbfaece49f24f7f654f",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "receipt",
+        "contains-text"
+      ],
+      "caption": "scanned invoice with three line items",
+      "ocr_text": "Invoice 1042 Total $48.30 Paid by card",
+      "privacy_flags": [
+        "contains_text"
+      ],
+      "score": 1.0000000000000002
+    },
+    {
+      "path": "docs/demo/invoice-copy.ppm",
+      "sha256": "f700f8c7cb4702a448488908d1acb79ddf025240768ebda4a2c28ab2d91363fb",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "duplicate-candidate"
+      ],
+      "caption": "near duplicate scanned invoice",
+      "ocr_text": "Invoice 1042 Total $48.30",
+      "privacy_flags": [
+        "contains_text"
+      ],
+      "score": 0.999987082703113
+    },
+    {
+      "path": "docs/demo/landscape.ppm",
+      "sha256": "05913d5dace03ea03cb6629e7b5ebf51697ed3ab4454dab55465d978c4274301",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "mountain",
+        "outdoor"
+      ],
+      "caption": "green mountain landscape under blue sky",
+      "ocr_text": null,
+      "privacy_flags": [],
+      "score": 0.7332249691155032
+    }
+  ],
+  "duplicates_invoice": [
+    {
+      "path": "docs/demo/invoice.ppm",
+      "sha256": "13f2a806473ed7c1a762dcd3b5c6a338d22cdf71c4dcbcbfaece49f24f7f654f",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "receipt",
+        "contains-text"
+      ],
+      "caption": "scanned invoice with three line items",
+      "ocr_text": "Invoice 1042 Total $48.30 Paid by card",
+      "privacy_flags": [
+        "contains_text"
+      ],
+      "distance": 0
+    },
+    {
+      "path": "docs/demo/invoice-copy.ppm",
+      "sha256": "f700f8c7cb4702a448488908d1acb79ddf025240768ebda4a2c28ab2d91363fb",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "duplicate-candidate"
+      ],
+      "caption": "near duplicate scanned invoice",
+      "ocr_text": "Invoice 1042 Total $48.30",
+      "privacy_flags": [
+        "contains_text"
+      ],
+      "distance": 0
+    }
+  ],
+  "list": [
+    {
+      "path": "docs/demo/landscape.ppm",
+      "sha256": "05913d5dace03ea03cb6629e7b5ebf51697ed3ab4454dab55465d978c4274301",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "mountain",
+        "outdoor"
+      ],
+      "caption": "green mountain landscape under blue sky",
+      "ocr_text": null,
+      "privacy_flags": []
+    },
+    {
+      "path": "docs/demo/invoice-copy.ppm",
+      "sha256": "f700f8c7cb4702a448488908d1acb79ddf025240768ebda4a2c28ab2d91363fb",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "duplicate-candidate"
+      ],
+      "caption": "near duplicate scanned invoice",
+      "ocr_text": "Invoice 1042 Total $48.30",
+      "privacy_flags": [
+        "contains_text"
+      ]
+    },
+    {
+      "path": "docs/demo/invoice.ppm",
+      "sha256": "13f2a806473ed7c1a762dcd3b5c6a338d22cdf71c4dcbcbfaece49f24f7f654f",
+      "media_type": "image/x-portable-pixmap",
+      "width": 96,
+      "height": 64,
+      "tags": [
+        "x-portable-pixmap",
+        "landscape",
+        "invoice",
+        "document",
+        "receipt",
+        "contains-text"
+      ],
+      "caption": "scanned invoice with three line items",
+      "ocr_text": "Invoice 1042 Total $48.30 Paid by card",
+      "privacy_flags": [
+        "contains_text"
+      ]
+    }
+  ]
+}

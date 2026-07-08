@@ -1,0 +1,128 @@
+{
+  "created_at": "2026-07-08T04:19:41.945991Z",
+  "extensions": {},
+  "image": {
+    "average_color": [
+      216,
+      219,
+      215
+    ],
+    "dominant_colors": [],
+    "exif": {},
+    "height": 64,
+    "mode": "RGB",
+    "perceptual_hash": "ffffff83ffffffff",
+    "preview_data_uri": null,
+    "width": 96
+  },
+  "provenance": [
+    {
+      "confidence": null,
+      "created_at": "2026-07-08T04:19:41.945987Z",
+      "fields": [
+        "source.path",
+        "source.sha256",
+        "source.media_type",
+        "source.size_bytes",
+        "source.modified_at"
+      ],
+      "name": "core-file",
+      "version": "0.2.0"
+    },
+    {
+      "confidence": null,
+      "created_at": "2026-07-08T04:19:41.945990Z",
+      "fields": [
+        "image.width",
+        "image.height",
+        "image.mode",
+        "image.average_color",
+        "image.perceptual_hash",
+        "image.preview_data_uri",
+        "image.exif",
+        "semantic.tags",
+        "semantic.caption",
+        "semantic.embedding",
+        "semantic.embedding_model",
+        "semantic.embedding_dimensions",
+        "semantic.privacy_flags"
+      ],
+      "name": "core-image",
+      "version": "0.2.0"
+    },
+    {
+      "confidence": null,
+      "created_at": "2026-07-08T04:19:41.945999Z",
+      "fields": [
+        "semantic.caption",
+        "semantic.tags",
+        "semantic.ocr_text",
+        "semantic.privacy_flags",
+        "semantic.confidence"
+      ],
+      "name": "demo-model-output",
+      "version": "0.1.0"
+    }
+  ],
+  "refreshed_at": "2026-07-08T04:19:41.945997Z",
+  "schema_version": "0.2",
+  "semantic": {
+    "caption": "near duplicate scanned invoice",
+    "confidence": {
+      "caption": 0.84,
+      "ocr": 0.89
+    },
+    "embedding": [
+      0.26273348069083957,
+      0.26638255681154566,
+      0.26151712198393756,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.18610288215601137,
+      0.12406858810400759,
+      0.20678098017334595,
+      0.31017147026001896,
+      0.31017147026001896,
+      0.31017147026001896,
+      0.31017147026001896,
+      0.15934299060416657,
+      0.31017147026001896,
+      0.31017147026001896,
+      0.31017147026001896
+    ],
+    "embedding_dimensions": 29,
+    "embedding_model": "imgcapsule-visual-v1",
+    "ocr_text": "Invoice 1042 Total $48.30",
+    "privacy_flags": [
+      "contains_text"
+    ],
+    "tags": [
+      "x-portable-pixmap",
+      "landscape",
+      "invoice",
+      "document",
+      "duplicate-candidate"
+    ]
+  },
+  "source": {
+    "fingerprint_algorithm": "sha256",
+    "media_type": "image/x-portable-pixmap",
+    "modified_at": "2026-07-08T04:19:41.904959Z",
+    "path": "docs/demo/invoice-copy.ppm",
+    "sha256": "f700f8c7cb4702a448488908d1acb79ddf025240768ebda4a2c28ab2d91363fb",
+    "size_bytes": 18445
+  }
+}

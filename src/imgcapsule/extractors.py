@@ -128,13 +128,10 @@ def _dominant_colors_from_pillow(img) -> List[List[int]]:
 
 
 def _dhash_from_pillow(img) -> str:
-    gray = img.convert("L").resize((9, 8))
+    gray = img.convert("L").resize((8, 8))
     pixels = list(gray.getdata())
-    bits = []
-    for row in range(8):
-        offset = row * 9
-        for col in range(8):
-            bits.append(1 if pixels[offset + col] > pixels[offset + col + 1] else 0)
+    average = sum(pixels) / len(pixels)
+    bits = [1 if pixel >= average else 0 for pixel in pixels]
     return _bits_to_hex(bits)
 
 
@@ -363,13 +360,14 @@ def _dhash_from_pixels(width: int, height: int, pixels: List[Tuple[int, int, int
     if not width or not height or not pixels:
         return None
     gray = [sum(pixel) // 3 for pixel in pixels]
-    bits = []
+    sampled = []
     for row in range(8):
-        y = min(height - 1, int(row * height / 8))
+        y = min(height - 1, int((row + 0.5) * height / 8))
         for col in range(8):
-            x1 = min(width - 1, int(col * width / 9))
-            x2 = min(width - 1, int((col + 1) * width / 9))
-            bits.append(1 if gray[y * width + x1] > gray[y * width + x2] else 0)
+            x = min(width - 1, int((col + 0.5) * width / 8))
+            sampled.append(gray[y * width + x])
+    average = sum(sampled) / len(sampled)
+    bits = [1 if value >= average else 0 for value in sampled]
     return _bits_to_hex(bits)
 
 
