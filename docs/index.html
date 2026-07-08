@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>imgcapsule - portable meaning for images</title>
+    <meta name="description" content="imgcapsule creates portable semantic sidecars for images with local search, visual similarity, duplicate detection, Hugging Face models, and BYOK adapters.">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17201b;
+        --muted: #5b665f;
+        --line: #d9ded8;
+        --paper: #fbfbf8;
+        --band: #eff5ef;
+        --accent: #0f7a5f;
+        --accent-2: #2b4d8f;
+        --code: #16231f;
+        --code-bg: #e9f0eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+        line-height: 1.55;
+      }
+
+      a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      header {
+        border-bottom: 1px solid var(--line);
+        background: rgba(251, 251, 248, 0.94);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      nav {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        font-weight: 760;
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .navlinks {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        font-size: 14px;
+      }
+
+      .hero {
+        padding: 86px 0 60px;
+        background:
+          linear-gradient(90deg, rgba(239, 245, 239, 0.96), rgba(251, 251, 248, 0.86)),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='720' viewBox='0 0 1200 720'%3E%3Crect width='1200' height='720' fill='%23e1ece6'/%3E%3Cg fill='none' stroke='%2397aaa0' stroke-width='2' opacity='.62'%3E%3Crect x='670' y='94' width='332' height='226' rx='8'/%3E%3Crect x='752' y='362' width='260' height='178' rx='8'/%3E%3Cpath d='M701 280l74-84 58 62 44-48 92 70'/%3E%3Ccircle cx='755' cy='153' r='28'/%3E%3Cpath d='M777 492l64-70 50 51 32-35 63 54'/%3E%3Ccircle cx='818' cy='412' r='20'/%3E%3C/g%3E%3Cg fill='%230f7a5f' opacity='.78'%3E%3Crect x='1020' y='115' width='72' height='12' rx='6'/%3E%3Crect x='1020' y='141' width='104' height='12' rx='6'/%3E%3Crect x='1020' y='167' width='88' height='12' rx='6'/%3E%3C/g%3E%3Cg fill='%232b4d8f' opacity='.55'%3E%3Crect x='1040' y='374' width='76' height='10' rx='5'/%3E%3Crect x='1040' y='397' width='52' height='10' rx='5'/%3E%3Crect x='1040' y='420' width='96' height='10' rx='5'/%3E%3C/g%3E%3C/svg%3E");
+        background-size: cover;
+        background-position: center;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.98fr) minmax(320px, 0.72fr);
+        gap: 48px;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: clamp(44px, 7vw, 82px);
+        line-height: 0.96;
+        margin: 0 0 24px;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        font-size: 20px;
+        max-width: 680px;
+        color: #334039;
+        margin: 0 0 28px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid var(--accent);
+        color: white;
+        background: var(--accent);
+        border-radius: 6px;
+        font-weight: 680;
+      }
+
+      .button.secondary {
+        color: var(--accent);
+        background: transparent;
+      }
+
+      .terminal {
+        background: var(--code);
+        color: #eef7f1;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 18px 40px rgba(23, 32, 27, 0.18);
+        overflow: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+
+      section {
+        padding: 68px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      section.band {
+        background: var(--band);
+      }
+
+      h2 {
+        font-size: 32px;
+        line-height: 1.1;
+        margin: 0 0 16px;
+        letter-spacing: 0;
+      }
+
+      .section-lede {
+        color: var(--muted);
+        max-width: 760px;
+        margin: 0 0 30px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        padding: 20px;
+      }
+
+      .card h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 0.86fr) minmax(360px, 1fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .inline-code {
+        background: var(--code-bg);
+        border-radius: 4px;
+        padding: 2px 5px;
+      }
+
+      .feature-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 20px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+
+      .feature-list li {
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+      }
+
+      footer {
+        padding: 36px 0;
+        color: var(--muted);
+        border-top: 1px solid var(--line);
+      }
+
+      @media (max-width: 840px) {
+        .hero-grid,
+        .split,
+        .grid,
+        .feature-list {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          padding-top: 58px;
+        }
+
+        nav {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 14px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav class="shell" aria-label="Main navigation">
+        <a class="brand" href="#">imgcapsule</a>
+        <div class="navlinks">
+          <a href="#what">What It Does</a>
+          <a href="#models">Models</a>
+          <a href="#workflow">Workflow</a>
+          <a href="https://github.com/DIGlabUAB/ImageCapsule">GitHub</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="shell hero-grid">
+          <div>
+            <h1>Portable meaning for images.</h1>
+            <p class="lede">imgcapsule turns image files into searchable, inspectable semantic sidecars with fingerprints, metadata, captions, OCR, embeddings, privacy flags, provenance, and local SQLite search.</p>
+            <div class="actions">
+              <a class="button" href="https://github.com/DIGlabUAB/ImageCapsule">View on GitHub</a>
+              <a class="button secondary" href="#quickstart">Quickstart</a>
+            </div>
+          </div>
+          <div class="terminal" aria-label="Command line example">
+            <pre><code>python -m pip install "imgcapsule[hf]"
+
+imgcapsule build photo.jpg \
+  --adapter hf-caption \
+  --adapter hf-clip
+
+imgcapsule index ./photos --db photos.icdb
+imgcapsule search photos.icdb "invoice"
+imgcapsule similar photos.icdb photo.jpg</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="what">
+        <div class="shell">
+          <h2>Image pixels stay in the image. Meaning goes in the capsule.</h2>
+          <p class="section-lede">A capsule is a JSON sidecar that lets software understand and search images without repeatedly decoding files or re-running model pipelines.</p>
+          <div class="grid">
+            <article class="card">
+              <h3>Local Capsule Files</h3>
+              <p>Create <span class="inline-code">.capsule.json</span> sidecars with hashes, dimensions, perceptual fingerprints, previews, EXIF summaries, privacy flags, and provenance.</p>
+            </article>
+            <article class="card">
+              <h3>Searchable Stores</h3>
+              <p>Index capsules into a local SQLite <span class="inline-code">.icdb</span> store for text search, visual similarity, duplicate detection, refresh, export, and import.</p>
+            </article>
+            <article class="card">
+              <h3>Swappable AI Models</h3>
+              <p>Use built-in local extraction, Hugging Face open-source models, Tesseract OCR, or any hosted model through BYOK HTTP endpoints.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="band" id="models">
+        <div class="shell split">
+          <div>
+            <h2>Bring open models or your own key.</h2>
+            <p class="section-lede">The package does not force one provider. Every generated field records provenance so users know which model created each caption, embedding, tag, or OCR result.</p>
+            <ul class="feature-list">
+              <li><strong>Hugging Face captions:</strong> <span class="inline-code">hf-caption=&lt;model&gt;</span></li>
+              <li><strong>Hugging Face embeddings:</strong> <span class="inline-code">hf-clip=&lt;model&gt;</span></li>
+              <li><strong>Zero-shot tags:</strong> <span class="inline-code">hf-tags=&lt;model&gt;|label1,label2</span></li>
+              <li><strong>Custom endpoint:</strong> <span class="inline-code">byok=&lt;url&gt;</span></li>
+            </ul>
+          </div>
+          <div class="terminal">
+            <pre><code>export IMGCAPSULE_BYOK_API_KEY="..."
+export IMGCAPSULE_BYOK_MODEL="vision-model"
+
+imgcapsule build photo.jpg \
+  --adapter byok=https://api.example.com/image-capsule
+
+imgcapsule inspect photo.jpg.capsule.json</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="workflow">
+        <div class="shell">
+          <h2>Complete release workflow</h2>
+          <p class="section-lede">This release covers the full developer path from one image to a portable capsule library.</p>
+          <ul class="feature-list">
+            <li>Build and validate capsule sidecars.</li>
+            <li>Inspect generated JSON and provenance.</li>
+            <li>Merge external model output with <span class="inline-code">enrich</span>.</li>
+            <li>Index images or folders into SQLite.</li>
+            <li>Search captions, tags, OCR, paths, and metadata.</li>
+            <li>Find visually similar images using embeddings.</li>
+            <li>Find near-duplicates using perceptual hashes.</li>
+            <li>Refresh, export, and import capsule libraries.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="band" id="quickstart">
+        <div class="shell split">
+          <div>
+            <h2>Start with one image. Scale to a folder.</h2>
+            <p class="section-lede">The base package works offline. Install extras only when you want richer local OCR or Hugging Face inference.</p>
+          </div>
+          <div class="terminal">
+            <pre><code>python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[vision,hf,ocr]"
+
+imgcapsule build photo.jpg --adapter hf-caption
+imgcapsule validate photo.jpg.capsule.json
+
+imgcapsule index ./photos --db photos.icdb --adapter hf-clip
+imgcapsule search photos.icdb "whiteboard"
+imgcapsule export photos.icdb capsules.jsonl</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell">imgcapsule is an open image capsule format and Python package by DIGlabUAB.</div>
+    </footer>
+  </body>
+</html>

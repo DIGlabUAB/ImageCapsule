@@ -215,10 +215,12 @@ imgcapsule index ./photos --db photos.icdb --adapter ocr
 - The format is plain JSON first, so it is easy to debug and exchange.
 - Search and duplicate detection should work without re-running extraction.
 
-## Roadmap
+## Release Coverage
 
-- OCR adapter.
-- CLIP/DINO embedding adapters.
-- Privacy/safety adapter.
-- Binary capsule format for large libraries.
-- Browser and Node readers for capsule files.
+This release includes the complete local capsule workflow:
+
+- Local capsule creation, validation, inspection, enrichment, indexing, search, similarity, duplicate detection, refresh, export, and import.
+- Built-in dependency-light image fingerprints, dimensions, perceptual hashes, heuristic captions, visual embeddings, privacy flags, provenance, and SQLite storage.
+- Optional OCR, Hugging Face model adapters, and BYOK/custom endpoint adapters.
+- Model provenance and refresh behavior so generated fields can be replaced when the user changes models.
+- A JSON capsule format designed to be readable, portable, and easy to integrate from other tools.
